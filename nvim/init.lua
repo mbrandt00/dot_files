@@ -6,9 +6,10 @@ vim.opt.wrap = true
 vim.opt.textwidth = 90
 vim.opt.ignorecase = true
 vim.opt.softtabstop = 4
+vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
-vim.opt.expandtab = false
-vim.opt.tabstop = 1
+vim.opt.expandtab = true
+-- vim.opt.tabstop = 1
 -- vim.opt.clipboard =unnamed
 vim.api.nvim_set_keymap("n", "<leader>bd", ":bdelete<CR>", { noremap = true })
 vim.cmd "hi LineNr guifg=#61afef ctermfg=blue"
