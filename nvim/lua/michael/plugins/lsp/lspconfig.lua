@@ -73,94 +73,92 @@ return {
       local hl = "DiagnosticSign" .. type
       vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
     end
+    local status, result = pcall(function()
+      -- configure html server
+      lspconfig["html"].setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+      }
 
-    -- configure html server
-    lspconfig["html"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-    }
+      lspconfig["solargraph"].setup {
+        on_attach = on_attach,
+        filetypes = { "ruby" },
+        capabilities = capabilities,
+      }
 
-    lspconfig["solargraph"].setup {
-      on_attach = on_attach,
-      filetypes = { "ruby" },
-      capabilities = capabilities,
-    }
+      -- configure typescript server with plugin
+      lspconfig["tsserver"].setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+        filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "svelte" },
+      }
 
-    -- configure typescript server with plugin
-    lspconfig["tsserver"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-      filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "svelte" },
-    }
+      -- configure css server
+      lspconfig["cssls"].setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+      }
 
-    -- configure css server
-    lspconfig["cssls"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-    }
+      -- configure tailwindcss server
+      lspconfig["tailwindcss"].setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+      }
 
-    -- configure tailwindcss server
-    lspconfig["tailwindcss"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-    }
+      -- configure svelte server
+      lspconfig["svelte"].setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+        filetypes = { "svelte" },
+      }
 
-    -- configure svelte server
-    lspconfig["svelte"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-      filetypes = { "svelte" },
-    }
+      -- configure prisma orm server
+      lspconfig["prismals"].setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+      }
 
-    lspconfig["graphql"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-    }
-    -- configure prisma orm server
-    lspconfig["prismals"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-    }
+      -- configure graphql language server
+      lspconfig["graphql"].setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+        filetypes = { "graphql", "gql", "svelte", "typescriptreact", "javascriptreact" },
+      }
 
-    -- configure graphql language server
-    lspconfig["graphql"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-      filetypes = { "graphql", "gql", "svelte", "typescriptreact", "javascriptreact" },
-    }
+      -- configure emmet language server
+      lspconfig["emmet_ls"].setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+        filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
+      }
 
-    -- configure emmet language server
-    lspconfig["emmet_ls"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-      filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
-    }
+      -- configure python server
+      lspconfig["pyright"].setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+      }
 
-    -- configure python server
-    lspconfig["pyright"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-    }
-
-    -- configure lua server (with special settings)
-    lspconfig["lua_ls"].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-      settings = { -- custom settings for lua
-        Lua = {
-          -- make the language server recognize "vim" global
-          diagnostics = {
-            globals = { "vim" },
-          },
-          workspace = {
-            -- make language server aware of runtime files
-            library = {
-              [vim.fn.expand "$VIMRUNTIME/lua"] = true,
-              [vim.fn.stdpath "config" .. "/lua"] = true,
+      -- configure lua server (with special settings)
+      lspconfig["lua_ls"].setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+        settings = { -- custom settings for lua
+          Lua = {
+            -- make the language server recognize "vim" global
+            diagnostics = {
+              globals = { "vim" },
+            },
+            workspace = {
+              -- make language server aware of runtime files
+              library = {
+                [vim.fn.expand "$VIMRUNTIME/lua"] = true,
+                [vim.fn.stdpath "config" .. "/lua"] = true,
+              },
             },
           },
         },
-      },
-    }
+      }
+    end)
+    if not status then print("Error in LSP configuration:", result) end
   end,
 }
