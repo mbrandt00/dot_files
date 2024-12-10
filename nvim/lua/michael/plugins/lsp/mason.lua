@@ -7,17 +7,19 @@ return {
     "jay-babu/mason-nvim-dap.nvim",
   },
   config = function()
-    -- import mason
+    -- Import mason
     local mason = require "mason"
 
-    -- import mason-lspconfig
+    -- Import mason-lspconfig
     local mason_lspconfig = require "mason-lspconfig"
 
+    -- Import mason-tool-installer
     local mason_tool_installer = require "mason-tool-installer"
 
+    -- Import mason-nvim-dap
     local mason_nvim_dap = require "mason-nvim-dap"
 
-    -- enable mason and configure icons
+    -- Enable mason and configure icons
     mason.setup {
       ui = {
         icons = {
@@ -28,15 +30,17 @@ return {
       },
     }
 
+    -- Setup nvim-dap
     mason_nvim_dap.setup {
       ensure_installed = { "python" },
       automatic_installation = true,
     }
 
+    -- Set up mason-lspconfig with Ruff
     mason_lspconfig.setup {
-      -- list of servers for mason to install
+      -- List of servers for mason to install
       ensure_installed = {
-        "tsserver",
+        "ts_ls",
         "html",
         "cssls",
         "tailwindcss",
@@ -47,21 +51,25 @@ return {
         "prismals",
         "pyright",
         "rubocop",
-        "solargraph",
+        "ruff",
       },
-      -- auto-install configured servers (with lspconfig)
-      automatic_installation = true, -- not the same as ensure_installed
+      automatic_installation = true, -- Automatically install the servers
     }
 
+    -- Set up mason-tool-installer
     mason_tool_installer.setup {
       ensure_installed = {
         "prettier", -- prettier formatter
         "stylua", -- lua formatter
         "isort", -- python formatter
         "black", -- python formatter
-        "pylint", -- python linter
-        "eslint_d", -- js linter
+        "eslint", -- js linter
+        "graphql-language-service-cli",
+        "ruff", -- Ensure ruff is installed via mason
       },
     }
+
+    -- Set up lspconfig for Ruff
+    local lspconfig = require "lspconfig"
   end,
 }

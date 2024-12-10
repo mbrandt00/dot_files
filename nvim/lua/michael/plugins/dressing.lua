@@ -1,5 +1,5 @@
 return {
-  "stevearc/dressing.nvim",
+  "stevearc/dressing.nvim", -- improve default vim.ui interfaces
   config = function()
     local dressing = require "dressing"
     dressing.setup {

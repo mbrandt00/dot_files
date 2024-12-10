@@ -80,14 +80,19 @@ return {
         on_attach = on_attach,
       }
 
-      lspconfig["solargraph"].setup {
+      lspconfig["rubocop"].setup {
         on_attach = on_attach,
         filetypes = { "ruby" },
         capabilities = capabilities,
       }
 
+      lspconfig["ruby_lsp"].setup {
+        on_attach = on_attach,
+        filetypes = { "ruby" },
+        capabilities = capabilities,
+      }
       -- configure typescript server with plugin
-      lspconfig["tsserver"].setup {
+      lspconfig["ts_ls"].setup {
         capabilities = capabilities,
         on_attach = on_attach,
         filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "svelte" },
@@ -112,12 +117,6 @@ return {
         filetypes = { "svelte" },
       }
 
-      -- configure prisma orm server
-      lspconfig["prismals"].setup {
-        capabilities = capabilities,
-        on_attach = on_attach,
-      }
-
       -- configure graphql language server
       lspconfig["graphql"].setup {
         capabilities = capabilities,
@@ -136,9 +135,20 @@ return {
       lspconfig["pyright"].setup {
         capabilities = capabilities,
         on_attach = on_attach,
+        filetypes = { "python" },
       }
 
+      lspconfig["ruff"].setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+        filetypes = { "python" },
+      }
       -- configure lua server (with special settings)
+      lspconfig["sourcekit"].setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+        filetypes = { "swift" },
+      }
       lspconfig["lua_ls"].setup {
         capabilities = capabilities,
         on_attach = on_attach,

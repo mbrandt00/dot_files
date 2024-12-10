@@ -5,17 +5,9 @@ return {
 
   "inkarkat/vim-ReplaceWithRegister", -- replace with register contents using motion (gr + motion)
 
-  "tpope/vim-fugitive",
-
-  "mfussenegger/nvim-lint",
-
   "wakatime/vim-wakatime",
-
-  "mfussenegger/nvim-dap",
-
-  "jay-babu/mason-nvim-dap.nvim",
 
   "junegunn/vim-peekaboo",
 
-  "tpope/vim-dispatch",
+  "edluffy/hologram.nvim",
 }

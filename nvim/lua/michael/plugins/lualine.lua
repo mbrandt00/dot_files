@@ -4,7 +4,6 @@ return {
   config = function()
     local lualine = require "lualine"
     local lazy_status = require "lazy.status" -- to configure lazy pending updates count
-    -- local git_signs = require "gitsigns"
 
     local colors = {
       blue = "#65D1FF",
@@ -49,15 +48,26 @@ return {
         c = { bg = colors.inactive_bg, fg = colors.semilightgray },
       },
     }
-
     -- configure lualine with modified theme
     lualine.setup {
       options = {
         theme = my_lualine_theme,
       },
       sections = {
+        lualine_b = {
+          {
+            "branch",
+            fmt = function(display_string, context)
+              if #display_string > 20 then
+                return display_string:sub(1, 20) .. "..."
+              else
+                return display_string
+              end
+            end,
+          },
+        },
         lualine_c = {
-          { "filename", path = 1 },
+          { "filename", path = 3 },
         },
         lualine_x = {
           {
