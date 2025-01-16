@@ -1,6 +1,5 @@
 return {
   "nvim-telescope/telescope.nvim",
-  -- branch = "0.1.x",
   dependencies = {
     "nvim-lua/plenary.nvim",
     { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
@@ -42,8 +41,8 @@ return {
         path_display = { "truncate " },
         mappings = {
           i = {
-            ["<C-k>"] = actions.move_selection_previous, -- move to prev result
-            ["<C-j>"] = actions.move_selection_next, -- move to next result
+            ["<C-k>"] = actions.move_selection_previous,
+            ["<C-j>"] = actions.move_selection_next,
             ["<C-q>"] = actions.smart_send_to_qflist,
           },
         },
@@ -52,36 +51,36 @@ return {
 
     telescope.load_extension "fzf"
 
-    -- set keymaps
     local keymap = vim.keymap
 
+    -- Basic telescope mappings
     keymap.set("n", "<leader>ff", "<cmd>Telescope smart_open hidden=true<cr>", { desc = "Fuzzy find files in cwd" })
     keymap.set(
       "n",
       "<leader>fg",
       "<cmd>Telescope git_status<CR>",
-      { desc = "list current changes per file with diff preview", noremap = true, silent = true }
+      { desc = "List current changes per file with diff preview", noremap = true, silent = true }
     )
     keymap.set("n", "<leader>fr", "<cmd>Telescope oldfiles<cr>", { desc = "Fuzzy find recent files" })
     keymap.set("n", "<leader>fs", "<cmd>Telescope live_grep<cr>", { desc = "Find string in cwd" })
     keymap.set("n", "<leader>fR", function() builtin.lsp_references() end, { desc = "Find references" })
     keymap.set("n", "<leader>fc", "<cmd>Telescope grep_string<cr>", { desc = "Find string under cursor in cwd" })
-    -- keymap.set("n", "<leader>m", ":Telescope marks<CR>", { noremap = true, silent = true, desc = "Fuzzy marks" })
     keymap.set("n", "<leader>bb", ":Telescope buffers<CR>", { noremap = true, silent = true, desc = "Fuzzy buffers" })
-    keymap.set("n", "<C-s>", require("auto-session.session-lens").search_session, {
-      noremap = true,
-    })
+    keymap.set("n", "<C-s>", require("auto-session.session-lens").search_session, { noremap = true })
+
+    -- Additional telescope mappings
+    keymap.set(
+      "n",
+      "<leader>fn",
+      function() require("telescope").builtin.find_files { cwd = vim.fn.stdpath "config" } end,
+      { desc = "[F]ind [N]eovim files" }
+    )
+
+    keymap.set(
+      "n",
+      "<leader>fS",
+      function() require("telescope.builtin").lsp_document_symbols() end,
+      { desc = "Find symbols" }
+    )
   end,
-  vim.keymap.set(
-    "n",
-    "<leader>fn",
-    function() require("telescope").builtin.find_files { cwd = vim.fn.stdpath "config" } end,
-    { desc = "[F]ind [N]eovim files" }
-  ),
-  vim.keymap.set(
-    "n",
-    "<leader>fS",
-    function() require("telescope.builtin").lsp_document_symbols() end,
-    { desc = "Find symbols" }
-  ),
 }

@@ -1,0 +1,5 @@
+theme = dark:dracula+,light:catppuccin-latte
+
+font-size = 14
+font-family = JetBrainsMono Nerd Font Mono
+mouse-hide-while-typing = true

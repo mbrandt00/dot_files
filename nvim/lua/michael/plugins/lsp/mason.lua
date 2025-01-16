@@ -50,8 +50,8 @@ return {
         "emmet_ls",
         "prismals",
         "pyright",
-        "rubocop",
-        "ruff",
+        "rubocop"
+        -- "ruff",
       },
       automatic_installation = true, -- Automatically install the servers
     }
@@ -64,8 +64,8 @@ return {
         "isort", -- python formatter
         "black", -- python formatter
         "eslint", -- js linter
-        "graphql-language-service-cli",
-        "ruff", -- Ensure ruff is installed via mason
+        "graphql-language-service-cli"
+        -- "ruff", -- Ensure ruff is installed via mason
       },
     }
 
