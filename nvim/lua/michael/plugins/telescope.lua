@@ -54,7 +54,7 @@ return {
     local keymap = vim.keymap
 
     -- Basic telescope mappings
-    keymap.set("n", "<leader>ff", "<cmd>Telescope smart_open hidden=true<cr>", { desc = "Fuzzy find files in cwd" })
+    keymap.set("n", "<leader>ff", "<cmd>Telescope find_files hidden=true<cr>", { desc = "Fuzzy find files in cwd" })
     keymap.set(
       "n",
       "<leader>fg",

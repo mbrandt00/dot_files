@@ -36,7 +36,6 @@ return {
       automatic_installation = true,
     }
 
-    -- Set up mason-lspconfig with Ruff
     mason_lspconfig.setup {
       -- List of servers for mason to install
       ensure_installed = {
@@ -50,8 +49,7 @@ return {
         "emmet_ls",
         "prismals",
         "pyright",
-        "rubocop"
-        -- "ruff",
+        "rubocop",
       },
       automatic_installation = true, -- Automatically install the servers
     }
@@ -64,12 +62,8 @@ return {
         "isort", -- python formatter
         "black", -- python formatter
         "eslint", -- js linter
-        "graphql-language-service-cli"
-        -- "ruff", -- Ensure ruff is installed via mason
+        "graphql-language-service-cli",
       },
     }
-
-    -- Set up lspconfig for Ruff
-    local lspconfig = require "lspconfig"
   end,
 }
