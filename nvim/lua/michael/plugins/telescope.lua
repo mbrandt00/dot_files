@@ -39,6 +39,9 @@ return {
       },
       defaults = {
         path_display = { "truncate " },
+        file_ignore_patterns = {
+          "^.git/logs/",
+        },
         mappings = {
           i = {
             ["<C-k>"] = actions.move_selection_previous,

@@ -45,7 +45,7 @@ return {
           command = rubocop_cmd,
           timeout_ms = 1000,
         },
-        python = { "isort", "black" },
+        python = { "black" },
       },
 
       format_on_save = {
