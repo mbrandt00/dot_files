@@ -41,6 +41,7 @@ return {
         path_display = { "truncate " },
         file_ignore_patterns = {
           "^.git/logs/",
+          "^private/var/",
         },
         mappings = {
           i = {

@@ -1,7 +1,9 @@
 return {
   "neovim/nvim-lspconfig",
   event = { "BufReadPre", "BufNewFile" },
+  priority = 800,
   dependencies = {
+    "hrsh7th/nvim-cmp",
     "hrsh7th/cmp-nvim-lsp",
     { "antosha417/nvim-lsp-file-operations", config = true },
   },
@@ -132,17 +134,46 @@ return {
       }
 
       -- configure python server
+      lspconfig["ruff"].setup {
+        capabilities = capabilities,
+        on_attach = function(client, bufnr)
+          on_attach(client, bufnr)
+
+          -- Format on save with logging
+          vim.api.nvim_create_autocmd("BufWritePre", {
+            buffer = bufnr,
+            callback = function() vim.lsp.buf.format { bufnr = bufnr } end,
+          })
+        end,
+        settings = {
+          format = {
+            enabled = true,
+          },
+          lint = {
+            enabled = true,
+          },
+          organizeImports = {
+            enabled = true,
+          },
+        },
+      }
+
       lspconfig["pyright"].setup {
         capabilities = capabilities,
         on_attach = on_attach,
         filetypes = { "python" },
-      }
-
-      -- configure python server
-      lspconfig["black"].setup {
-        capabilities = capabilities,
-        on_attach = on_attach,
-        filetypes = { "python" },
+        settings = {
+          pyright = {
+            -- Using Ruff's import organizer
+            disableOrganizeImports = true,
+          },
+          python = {
+            analysis = {
+              -- Ignore all files for analysis to exclusively use Ruff for linting
+              ignore = { "*" },
+            },
+          },
+        },
       }
 
       -- configure lua server (with special settings)
