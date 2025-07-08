@@ -38,7 +38,7 @@ return {
         },
       },
       defaults = {
-        path_display = { "truncate " },
+        path_display = { "smart" },
         file_ignore_patterns = {
           "^.git/logs/",
           "^private/var/",

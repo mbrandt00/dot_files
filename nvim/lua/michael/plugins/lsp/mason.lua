@@ -1,7 +1,7 @@
 return {
-  "williamboman/mason.nvim",
+  "mason-org/mason.nvim",
   dependencies = {
-    "williamboman/mason-lspconfig.nvim",
+    "mason-org/mason-lspconfig.nvim",
     "WhoIsSethDaniel/mason-tool-installer",
     "mfussenegger/nvim-dap",
     "jay-babu/mason-nvim-dap.nvim",
@@ -49,7 +49,6 @@ return {
         "emmet_ls",
         "prismals",
         "pyright",
-        "rubocop",
       },
       automatic_installation = true, -- Automatically install the servers
     }

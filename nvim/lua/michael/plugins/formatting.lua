@@ -5,27 +5,6 @@ return {
   config = function()
     local conform = require "conform"
 
-    -- Define the custom RuboCop command function
-    local function rubocop_cmd()
-      local current_file = vim.fn.expand "%:p"
-      local project_root = vim.fn.finddir("rails-api", vim.fn.getcwd() .. ";")
-
-      if project_root ~= "" then
-        project_root = vim.fn.fnamemodify(project_root, ":p:h") -- Get absolute path
-        if vim.fn.filereadable(project_root .. "/Gemfile") == 1 then
-          return {
-            "bundle",
-            "exec",
-            "rubocop",
-            "--parallel",
-            "--debug",
-            "--force-exclusion", -- Respect .rubocop.yml exclusions
-            cwd = project_root,
-          }
-        end
-      end
-      return { "rubocop", "--debug" }
-    end -- Configure conform
     conform.setup {
       formatters_by_ft = {
         javascript = { "prettier" },
@@ -40,22 +19,33 @@ return {
         markdown = { "prettier" },
         graphql = { "prettier" },
         lua = { "stylua" },
-        ruby = {
-          "rubocop",
-          command = rubocop_cmd,
-          timeout_ms = 1000,
-        },
+        ruby = { "rubocop" },
         python = { "black" },
       },
 
-      format_on_save = {
-        lsp_fallback = true,
-        async = false,
-        timeout_ms = 1000, -- Global timeout
+      formatters = {
+        rubocop = {
+          command = "/Users/michaelbrandt/.asdf/shims/rubocop",
+          args = {
+            "--auto-correct-all",
+            "--stderr",
+            "--force-exclusion",
+            "$FILENAME",
+          },
+          stdin = false,
+          cwd = require("conform.util").root_file { "Gemfile", ".rubocop.yml" },
+        },
       },
+
+      format_on_save = function(bufnr)
+        return {
+          lsp_fallback = true,
+          timeout_ms = 3000,
+        }
+      end,
     }
 
-    -- Keybinding to trigger formatting
+    -- Manual formatting keymap
     vim.keymap.set(
       { "n", "v" },
       "<leader>mp",
