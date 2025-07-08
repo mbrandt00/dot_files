@@ -1,9 +1,8 @@
-theme = "duskfox"
-background = #0a0a0a
+theme = "dark:custom-dark,light:custom-light"
 
 
 font-size = 14
 font-family = JetBrainsMono Nerd Font Mono
 mouse-hide-while-typing = true
 
-background-opacity = 0.93
+background-opacity = 0.97

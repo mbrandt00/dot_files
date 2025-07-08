@@ -26,13 +26,9 @@ return {
       formatters = {
         rubocop = {
           command = "/Users/michaelbrandt/.asdf/shims/rubocop",
-          args = {
-            "--auto-correct-all",
-            "--stderr",
-            "--force-exclusion",
-            "$FILENAME",
-          },
-          stdin = false,
+          { "--server", "--auto-correct-all", "--stderr", "--force-exclusion", "--stdin", "$FILENAME" },
+          -- stdin = false,
+          require_output = false,
           cwd = require("conform.util").root_file { "Gemfile", ".rubocop.yml" },
         },
       },
