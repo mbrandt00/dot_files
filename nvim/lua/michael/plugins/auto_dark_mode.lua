@@ -37,7 +37,8 @@ return {
       set_dark_mode = function() set_colorscheme("tokyonight", "dark") end,
       set_light_mode = function()
         -- Optional: set gruvbox contrast level
-        vim.g.gruvbox_contrast_light = "soft"
+        vim.g.gruvbox_contrast_light = "medium"
+        vim.g.gruvbox_invert_selection = 0
         set_colorscheme("gruvbox", "light")
 
         -- Optional: enforce transparent bg
