@@ -5,13 +5,57 @@ return {
   dependencies = {
     "hrsh7th/nvim-cmp",
     "hrsh7th/cmp-nvim-lsp",
+    "hrsh7th/cmp-buffer",
+    "hrsh7th/cmp-path",
+    "L3MON4D3/LuaSnip",
+    "saadparwaiz1/cmp_luasnip",
     { "antosha417/nvim-lsp-file-operations", config = true },
   },
   config = function()
     -- import lspconfig plugin
     local lspconfig = require "lspconfig"
 
-    -- import cmp-nvim-lsp plugin
+    -- Configure nvim-cmp
+    local cmp = require "cmp"
+    local luasnip = require "luasnip"
+
+    cmp.setup {
+      snippet = {
+        expand = function(args) luasnip.lsp_expand(args.body) end,
+      },
+      mapping = cmp.mapping.preset.insert {
+        ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+        ["<C-f>"] = cmp.mapping.scroll_docs(4),
+        ["<C-Space>"] = cmp.mapping.complete(),
+        ["<C-n>"] = cmp.mapping.complete(),
+        ["<CR>"] = cmp.mapping.confirm { select = true },
+        ["<Tab>"] = cmp.mapping(function(fallback)
+          if cmp.visible() then
+            cmp.select_next_item()
+          elseif luasnip.expand_or_jumpable() then
+            luasnip.expand_or_jump()
+          else
+            fallback()
+          end
+        end, { "i", "s" }),
+        ["<S-Tab>"] = cmp.mapping(function(fallback)
+          if cmp.visible() then
+            cmp.select_prev_item()
+          elseif luasnip.jumpable(-1) then
+            luasnip.jump(-1)
+          else
+            fallback()
+          end
+        end, { "i", "s" }),
+      },
+      sources = cmp.config.sources({
+        { name = "nvim_lsp" },
+        { name = "luasnip" },
+      }, {
+        { name = "buffer" },
+        { name = "path" },
+      }),
+    }
 
     local keymap = vim.keymap -- for conciseness
 
@@ -69,14 +113,13 @@ return {
     }
 
     -- Change the Diagnostic symbols in the sign column (gutter)
-    -- (not in youtube nvim video)
     vim.diagnostic.config {
       signs = {
         text = {
-          [vim.diagnostic.severity.ERROR] = " ",
-          [vim.diagnostic.severity.WARN] = " ",
+          [vim.diagnostic.severity.ERROR] = " ",
+          [vim.diagnostic.severity.WARN] = " ",
           [vim.diagnostic.severity.HINT] = "󰠠 ",
-          [vim.diagnostic.severity.INFO] = " ",
+          [vim.diagnostic.severity.INFO] = " ",
         },
       },
       virtual_text = true,
@@ -84,6 +127,7 @@ return {
       update_in_insert = false,
       severity_sort = true,
     }
+
     local status, result = pcall(function()
       -- configure html server
       lspconfig["html"].setup {
@@ -102,6 +146,7 @@ return {
         filetypes = { "ruby" },
         capabilities = capabilities,
       }
+
       -- configure typescript server with plugin
       lspconfig["ts_ls"].setup {
         capabilities = capabilities,
@@ -191,10 +236,11 @@ return {
         on_attach = on_attach,
         filetypes = { "swift" },
       }
+
       lspconfig["lua_ls"].setup {
         capabilities = capabilities,
         on_attach = on_attach,
-        settings = { -- custom settings for lua
+        settings = {
           Lua = {
             -- make the language server recognize "vim" global
             diagnostics = {
@@ -211,6 +257,7 @@ return {
         },
       }
     end)
+
     if not status then print("Error in LSP configuration:", result) end
   end,
 }

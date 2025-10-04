@@ -30,12 +30,6 @@ return {
       },
     }
 
-    -- Setup nvim-dap
-    mason_nvim_dap.setup {
-      ensure_installed = { "python" },
-      automatic_installation = true,
-    }
-
     mason_lspconfig.setup {
       -- List of servers for mason to install
       ensure_installed = {

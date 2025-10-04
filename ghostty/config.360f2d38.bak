@@ -2,4 +2,3 @@ theme = "dark:custom-dark,light:custom-light"
 font-size = 14
 font-family = JetBrainsMono Nerd Font Mono
 mouse-hide-while-typing = true
-keybind = shift+enter=text:\x1b\r

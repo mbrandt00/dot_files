@@ -70,7 +70,7 @@ return {
     keymap.set("n", "<leader>fR", function() builtin.lsp_references() end, { desc = "Find references" })
     keymap.set("n", "<leader>fc", "<cmd>Telescope grep_string<cr>", { desc = "Find string under cursor in cwd" })
     keymap.set("n", "<leader>bb", ":Telescope buffers<CR>", { noremap = true, silent = true, desc = "Fuzzy buffers" })
-    keymap.set("n", "<C-s>", require("auto-session.session-lens").search_session, { noremap = true })
+    -- keymap.set("n", "<C-s>", require("auto-session.session-lens").search_session, { noremap = true })
 
     -- Additional telescope mappings
     keymap.set(

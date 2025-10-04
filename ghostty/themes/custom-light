@@ -1,4 +1,5 @@
 background = "#ffffff"
 foreground = "#111111"
-cursor-color = "#111111"
-theme = "Monokai Pro Light"
+cursor-color = "#CD853F"
+theme = "flexoki-light"
+background-opacity = 0.99
