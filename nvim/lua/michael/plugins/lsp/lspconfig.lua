@@ -12,9 +12,6 @@ return {
     { "antosha417/nvim-lsp-file-operations", config = true },
   },
   config = function()
-    -- import lspconfig plugin
-    local lspconfig = require "lspconfig"
-
     -- Configure nvim-cmp
     local cmp = require "cmp"
     local luasnip = require "luasnip"
@@ -57,54 +54,54 @@ return {
       }),
     }
 
-    local keymap = vim.keymap -- for conciseness
+    local keymap = vim.keymap
+
+    local function disable_fmt(client)
+      client.server_capabilities.documentFormattingProvider = false
+      client.server_capabilities.documentRangeFormattingProvider = false
+    end
 
     local opts = { noremap = true, silent = true }
     local on_attach = function(_client, bufnr)
       opts.buffer = bufnr
 
-      -- set keybinds
       opts.desc = "Show LSP references"
-      keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", opts) -- show definition, references
+      keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", opts)
 
       opts.desc = "Go to declaration"
-      keymap.set("n", "gD", vim.lsp.buf.declaration, opts) -- go to declaration
+      keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
 
       opts.desc = "Show LSP definitions"
-      keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts) -- show lsp definitions
-
-      -- opts.desc = "Show LSP implementations"
-      -- keymap.set("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts) -- show lsp implementations
+      keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
 
       opts.desc = "Show LSP type definitions"
-      keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", opts) -- show lsp type definitions
+      keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", opts)
 
       opts.desc = "See available code actions"
-      keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts) -- see available code actions, in visual mode will apply to selection
+      keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
 
       opts.desc = "Smart rename"
-      keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts) -- smart rename
+      keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
 
       opts.desc = "Show buffer diagnostics"
-      keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", opts) -- show  diagnostics for file
+      keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", opts)
 
       opts.desc = "Show line diagnostics"
-      keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts) -- show diagnostics for line
+      keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts)
 
       opts.desc = "Go to previous diagnostic"
-      keymap.set("n", "[d", vim.diagnostic.goto_prev, opts) -- jump to previous diagnostic in buffer
+      keymap.set("n", "[d", vim.diagnostic.goto_prev, opts)
 
       opts.desc = "Go to next diagnostic"
-      keymap.set("n", "]d", vim.diagnostic.goto_next, opts) -- jump to next diagnostic in buffer
+      keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
 
       opts.desc = "Show documentation for what is under cursor"
-      keymap.set("n", "K", vim.lsp.buf.hover, opts) -- show documentation for what is under cursor
+      keymap.set("n", "K", vim.lsp.buf.hover, opts)
 
       opts.desc = "Restart LSP"
-      keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
+      keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts)
     end
 
-    -- used to enable autocompletion (assign to every lsp server config)
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
     capabilities.textDocument.foldingRange = {
@@ -112,7 +109,6 @@ return {
       lineFoldingOnly = true,
     }
 
-    -- Change the Diagnostic symbols in the sign column (gutter)
     vim.diagnostic.config {
       signs = {
         text = {
@@ -129,125 +125,195 @@ return {
     }
 
     local status, result = pcall(function()
-      -- configure html server
-      lspconfig["html"].setup {
+      -- HTML
+      vim.lsp.config("html", {
         capabilities = capabilities,
-        on_attach = on_attach,
-      }
+        on_attach = function(client, bufnr)
+          disable_fmt(client)
+          on_attach(client, bufnr)
+        end,
+      })
 
-      lspconfig["rubocop"].setup {
+      -- Ruby
+      vim.lsp.config("rubocop", {
         on_attach = on_attach,
         filetypes = { "ruby" },
         capabilities = capabilities,
-      }
+      })
 
-      lspconfig["ruby_lsp"].setup {
+      vim.lsp.config("ruby_lsp", {
         on_attach = on_attach,
         filetypes = { "ruby" },
         capabilities = capabilities,
-      }
+      })
 
-      -- configure typescript server with plugin
-      lspconfig["ts_ls"].setup {
+      -- Deno (for Supabase Edge Functions)
+      vim.lsp.config("denols", {
         capabilities = capabilities,
         on_attach = on_attach,
-        filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "svelte" },
-      }
+        root_markers = { "deno.json", "deno.jsonc" },
+        workspace_required = true,
+        settings = {
+          deno = {
+            enable = true,
+            lint = true,
+            unstable = true,
+            suggest = {
+              imports = {
+                hosts = {
+                  ["https://deno.land"] = true,
+                  ["https://cdn.nest.land"] = true,
+                  ["https://crux.land"] = true,
+                },
+              },
+            },
+          },
+        },
+      })
 
-      -- configure css server
-      lspconfig["cssls"].setup {
+      -- Biome (formatting + linting for JS/TS/Svelte)
+      vim.lsp.config("biome", {
+        capabilities = capabilities,
+        on_attach = function(client, bufnr)
+          local filetype = vim.bo[bufnr].filetype
+
+          -- Enable formatting for supported filetypes
+          if filetype:match "javascript"
+            or filetype:match "typescript"
+            or filetype == "javascriptreact"
+            or filetype == "typescriptreact"
+            or filetype == "svelte"
+            or filetype == "html"
+            or filetype == "css"
+            or filetype == "json"
+          then
+            client.server_capabilities.documentFormattingProvider = true
+          end
+
+          on_attach(client, bufnr)
+        end,
+        filetypes = {
+          "javascript",
+          "typescript",
+          "javascriptreact",
+          "typescriptreact",
+          "svelte",
+          "json",
+          "jsonc",
+          "css",
+          "html",
+        },
+      })
+
+      -- TypeScript (excluding Deno projects and Svelte files)
+      vim.lsp.config("ts_ls", {
+        capabilities = capabilities,
+        on_attach = function(client, bufnr)
+          disable_fmt(client)
+          on_attach(client, bufnr)
+        end,
+        root_markers = { "package.json" },
+        filetypes = {
+          "typescript",
+          "javascript",
+          "javascriptreact",
+          "typescriptreact",
+        },
+      })
+
+      -- CSS
+      vim.lsp.config("cssls", {
+        capabilities = capabilities,
+        on_attach = function(client, bufnr)
+          disable_fmt(client)
+          on_attach(client, bufnr)
+        end,
+      })
+
+      -- Tailwind
+      vim.lsp.config("tailwindcss", {
         capabilities = capabilities,
         on_attach = on_attach,
-      }
+      })
 
-      -- configure tailwindcss server
-      lspconfig["tailwindcss"].setup {
+      -- Svelte
+      vim.lsp.config("svelte", {
         capabilities = capabilities,
-        on_attach = on_attach,
-      }
-
-      -- configure svelte server
-      lspconfig["svelte"].setup {
-        capabilities = capabilities,
-        on_attach = on_attach,
+        on_attach = function(client, bufnr)
+          disable_fmt(client)
+          on_attach(client, bufnr)
+        end,
         filetypes = { "svelte" },
-      }
+      })
 
-      -- configure graphql language server
-      lspconfig["graphql"].setup {
+      -- GraphQL
+      vim.lsp.config("graphql", {
         capabilities = capabilities,
         on_attach = on_attach,
         filetypes = { "graphql", "gql", "svelte", "typescriptreact", "javascriptreact" },
-      }
+      })
 
-      -- configure emmet language server
-      lspconfig["emmet_ls"].setup {
+      -- Emmet
+      vim.lsp.config("emmet_ls", {
         capabilities = capabilities,
-        on_attach = on_attach,
+        on_attach = function(client, bufnr)
+          disable_fmt(client)
+          on_attach(client, bufnr)
+        end,
         filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
-      }
+      })
 
-      -- configure python server
-      lspconfig["ruff"].setup {
+      -- Ruff (Python)
+      vim.lsp.config("ruff", {
         capabilities = capabilities,
         on_attach = function(client, bufnr)
           on_attach(client, bufnr)
-
-          -- Format on save with logging
           vim.api.nvim_create_autocmd("BufWritePre", {
             buffer = bufnr,
             callback = function() vim.lsp.buf.format { bufnr = bufnr } end,
           })
         end,
         settings = {
-          format = {
-            enabled = true,
-          },
-          lint = {
-            enabled = true,
-          },
-          organizeImports = {
-            enabled = true,
-          },
+          format = { enabled = true },
+          lint = { enabled = true },
+          organizeImports = { enabled = true },
         },
-      }
+      })
 
-      lspconfig["pyright"].setup {
+      -- Pyright
+      vim.lsp.config("pyright", {
         capabilities = capabilities,
         on_attach = on_attach,
         filetypes = { "python" },
         settings = {
           pyright = {
-            -- Using Ruff's import organizer
             disableOrganizeImports = true,
           },
           python = {
             analysis = {
-              -- Ignore all files for analysis to exclusively use Ruff for linting
               ignore = { "*" },
             },
           },
         },
-      }
+      })
 
-      -- configure lua server (with special settings)
-      lspconfig["sourcekit"].setup {
+      -- Swift
+      vim.lsp.config("sourcekit", {
         capabilities = capabilities,
         on_attach = on_attach,
         filetypes = { "swift" },
-      }
+      })
 
-      lspconfig["lua_ls"].setup {
+      -- Lua
+      vim.lsp.config("lua_ls", {
         capabilities = capabilities,
         on_attach = on_attach,
         settings = {
           Lua = {
-            -- make the language server recognize "vim" global
             diagnostics = {
               globals = { "vim" },
             },
             workspace = {
-              -- make language server aware of runtime files
               library = {
                 [vim.fn.expand "$VIMRUNTIME/lua"] = true,
                 [vim.fn.stdpath "config" .. "/lua"] = true,
@@ -255,9 +321,73 @@ return {
             },
           },
         },
-      }
+      })
+
+      -- Enable all configs
+      vim.lsp.enable "html"
+      vim.lsp.enable "rubocop"
+      vim.lsp.enable "ruby_lsp"
+      vim.lsp.enable "denols"
+      vim.lsp.enable "biome"
+      vim.lsp.enable "ts_ls"
+      vim.lsp.enable "cssls"
+      vim.lsp.enable "tailwindcss"
+      vim.lsp.enable "svelte"
+      vim.lsp.enable "graphql"
+      vim.lsp.enable "emmet_ls"
+      vim.lsp.enable "ruff"
+      vim.lsp.enable "pyright"
+      vim.lsp.enable "sourcekit"
+      vim.lsp.enable "lua_ls"
     end)
 
     if not status then print("Error in LSP configuration:", result) end
+
+    -- Biome: Auto-format and fix on save (defined OUTSIDE on_attach to avoid duplication)
+    vim.api.nvim_create_autocmd("BufWritePre", {
+      group = vim.api.nvim_create_augroup("BiomeFormat", { clear = true }),
+      pattern = { "*.js", "*.jsx", "*.ts", "*.tsx", "*.svelte", "*.json", "*.jsonc", "*.css", "*.html" },
+      callback = function(args)
+        local clients = vim.lsp.get_clients({ bufnr = args.buf, name = "biome" })
+        if #clients == 0 then return end
+
+        -- Run fixAll + organizeImports first (synchronously)
+        vim.lsp.buf.code_action({
+          context = {
+            only = { "source.fixAll", "source.organizeImports" },
+            diagnostics = {},
+          },
+          apply = true,
+        })
+
+        -- Then format (synchronously)
+        vim.lsp.buf.format({
+          bufnr = args.buf,
+          filter = function(client) return client.name == "biome" end,
+          timeout_ms = 2000,
+        })
+      end,
+    })
+
+    -- Prevent ts_ls from attaching to Supabase functions and Svelte files
+    vim.api.nvim_create_autocmd("LspAttach", {
+      callback = function(args)
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if not client then return end
+
+        local bufname = vim.api.nvim_buf_get_name(args.buf)
+        local filetype = vim.bo[args.buf].filetype
+
+        -- Stop ts_ls from Supabase functions
+        if client.name == "ts_ls" and bufname:match "supabase/functions" then
+          vim.schedule(function() vim.lsp.stop_client(client.id, true) end)
+        end
+
+        -- Stop ts_ls from Svelte files
+        if client.name == "ts_ls" and filetype == "svelte" then
+          vim.schedule(function() vim.lsp.stop_client(client.id, true) end)
+        end
+      end,
+    })
   end,
 }
