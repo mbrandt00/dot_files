@@ -1,5 +1,5 @@
 vim.g.mapleader = " "
-require "michael.lazy"
+require "lazy-setup"
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.wrap = true
