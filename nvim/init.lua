@@ -5,9 +5,10 @@ vim.opt.relativenumber = true
 vim.opt.wrap = true
 vim.opt.textwidth = 90
 vim.opt.ignorecase = true
--- vim.opt.softtabstop = 4
--- vim.opt.tabstop = 4
--- vim.opt.shiftwidth = 4
+vim.opt.softtabstop = 2
+vim.opt.tabstop = 2 -- Width of a tab character
+vim.opt.shiftwidth = 2 -- Width of indentation
+vim.opt.expandtab = true -- Convert tabs to spaces
 vim.opt.expandtab = true
 vim.opt.clipboard = "unnamed"
 vim.api.nvim_set_keymap("n", "<leader>bd", ":bdelete<CR>", { noremap = true })
@@ -51,3 +52,13 @@ vim.api.nvim_set_keymap("n", "<leader><leader>c", '"_c', { noremap = true, silen
 
 -- easy exit out of insert mode
 vim.api.nvim_set_keymap("i", "jj", "<Esc>", { noremap = false })
+-- close all pop up windows
+-- Close all floating windows
+vim.api.nvim_create_user_command("CloseFloatingWindows", function(opts)
+  for _, window_id in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_get_config(window_id).relative ~= "" then vim.api.nvim_win_close(window_id, opts.bang) end
+  end
+end, { bang = true, nargs = 0 })
+
+-- Keymap
+vim.keymap.set("n", "<leader>cf", "<cmd>CloseFloatingWindows<CR>", { desc = "Close floating windows" })

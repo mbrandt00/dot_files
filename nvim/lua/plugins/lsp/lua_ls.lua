@@ -5,6 +5,7 @@ local shared = require "plugins.lsp.config"
 
 -- Configure lua_ls
 vim.lsp.config("lua_ls", {
+  cmd = { "lua-language-server" },
   capabilities = shared.capabilities,
   on_attach = shared.on_attach,
   settings = {

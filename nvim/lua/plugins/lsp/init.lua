@@ -80,9 +80,6 @@ return {
       require "plugins.lsp.graphql"
       require "plugins.lsp.lua_ls"
 
-      -- TODO: Move these to individual files following the ts_ls pattern
-      -- For now, keeping them inline until migration is complete
-
       -- HTML
       vim.lsp.config("html", {
         capabilities = shared.capabilities,
@@ -112,7 +109,8 @@ return {
           local filetype = vim.bo[bufnr].filetype
 
           -- Enable formatting for supported filetypes
-          if filetype:match "javascript"
+          if
+            filetype:match "javascript"
             or filetype:match "typescript"
             or filetype == "javascriptreact"
             or filetype == "typescriptreact"
@@ -234,31 +232,5 @@ return {
     end)
 
     if not status then print("Error in LSP configuration:", result) end
-
-    -- Biome: Auto-format and fix on save (defined OUTSIDE on_attach to avoid duplication)
-    vim.api.nvim_create_autocmd("BufWritePre", {
-      group = vim.api.nvim_create_augroup("BiomeFormat", { clear = true }),
-      pattern = { "*.js", "*.jsx", "*.ts", "*.tsx", "*.svelte", "*.json", "*.jsonc", "*.css", "*.html" },
-      callback = function(args)
-        local clients = vim.lsp.get_clients({ bufnr = args.buf, name = "biome" })
-        if #clients == 0 then return end
-
-        -- Run fixAll + organizeImports first (synchronously)
-        vim.lsp.buf.code_action({
-          context = {
-            only = { "source.fixAll", "source.organizeImports" },
-            diagnostics = {},
-          },
-          apply = true,
-        })
-
-        -- Then format (synchronously)
-        vim.lsp.buf.format({
-          bufnr = args.buf,
-          filter = function(client) return client.name == "biome" end,
-          timeout_ms = 2000,
-        })
-      end,
-    })
   end,
 }

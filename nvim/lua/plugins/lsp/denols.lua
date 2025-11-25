@@ -6,6 +6,7 @@ local shared = require "plugins.lsp.config"
 
 -- Configure denols
 vim.lsp.config("denols", {
+  cmd = { "deno", "lsp" },
   capabilities = shared.capabilities,
   on_attach = function(client, bufnr)
     shared.on_attach(client, bufnr)
@@ -14,10 +15,10 @@ vim.lsp.config("denols", {
     vim.api.nvim_create_autocmd("BufWritePre", {
       buffer = bufnr,
       callback = function()
-        vim.lsp.buf.format({
+        vim.lsp.buf.format {
           bufnr = bufnr,
           filter = function(c) return c.name == "denols" end,
-        })
+        }
       end,
     })
   end,
@@ -41,5 +42,4 @@ vim.lsp.config("denols", {
   },
 })
 
--- Return empty table to satisfy Lazy.nvim (this is not a plugin spec)
 return {}
