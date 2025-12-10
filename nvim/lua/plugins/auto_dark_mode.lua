@@ -8,8 +8,8 @@ return {
       priority = 1000,
       config = function()
         require("tokyonight").setup {
-          style = "storm",
-          transparent = true,
+          style = "moon",
+          transparent = false,
         }
       end,
     },

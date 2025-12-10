@@ -12,7 +12,6 @@ return {
     { "antosha417/nvim-lsp-file-operations", config = true },
   },
   config = function()
-    -- Load shared configuration
     local shared = require "plugins.lsp.config"
 
     -- Configure nvim-cmp
@@ -73,42 +72,82 @@ return {
       severity_sort = true,
     }
 
+    -- Set up keymaps on LspAttach (more reliable than on_attach in config)
+    vim.api.nvim_create_autocmd("LspAttach", {
+      group = vim.api.nvim_create_augroup("UserLspConfig", {}),
+      callback = function(ev)
+        local opts = { buffer = ev.buf, noremap = true, silent = true }
+
+        opts.desc = "Show LSP references"
+        vim.keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", opts)
+
+        opts.desc = "Go to declaration"
+        vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
+
+        opts.desc = "Show LSP definitions"
+        vim.keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
+
+        opts.desc = "Show LSP type definitions"
+        vim.keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", opts)
+
+        opts.desc = "See available code actions"
+        vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
+
+        opts.desc = "Smart rename"
+        vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
+
+        opts.desc = "Show buffer diagnostics"
+        vim.keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", opts)
+
+        opts.desc = "Show line diagnostics"
+        vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts)
+
+        opts.desc = "Go to previous diagnostic"
+        vim.keymap.set("n", "[d", vim.diagnostic.get_prev, opts)
+
+        opts.desc = "Go to next diagnostic"
+        vim.keymap.set("n", "]d", vim.diagnostic.get_next, opts)
+
+        opts.desc = "Show documentation for what is under cursor"
+        vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+
+        opts.desc = "Restart LSP"
+        vim.keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts)
+      end,
+    })
+
     local status, result = pcall(function()
-      -- Load individual LSP server configurations
+      -- Load custom LSP server configurations
       require "plugins.lsp.ts_ls"
       require "plugins.lsp.denols"
-      require "plugins.lsp.graphql"
       require "plugins.lsp.lua_ls"
 
-      -- HTML
-      vim.lsp.config("html", {
-        capabilities = shared.capabilities,
-        on_attach = function(client, bufnr)
-          shared.disable_fmt(client)
-          shared.on_attach(client, bufnr)
-        end,
-      })
+      -- Simple servers: just need capabilities + on_attach
+      local simple_servers = { "tailwindcss", "rubocop", "ruby_lsp", "sourcekit", "graphql" }
+      for _, server in ipairs(simple_servers) do
+        vim.lsp.config(server, {
+          capabilities = shared.capabilities,
+          on_attach = shared.on_attach,
+        })
+      end
 
-      -- Ruby
-      vim.lsp.config("rubocop", {
-        on_attach = shared.on_attach,
-        filetypes = { "ruby" },
-        capabilities = shared.capabilities,
-      })
+      -- Servers with disable_fmt
+      local disable_fmt_servers = { "html", "cssls", "svelte", "emmet_ls" }
+      for _, server in ipairs(disable_fmt_servers) do
+        vim.lsp.config(server, {
+          capabilities = shared.capabilities,
+          on_attach = function(client, bufnr)
+            shared.disable_fmt(client)
+            shared.on_attach(client, bufnr)
+          end,
+        })
+      end
 
-      vim.lsp.config("ruby_lsp", {
-        on_attach = shared.on_attach,
-        filetypes = { "ruby" },
-        capabilities = shared.capabilities,
-      })
-
-      -- Biome (formatting + linting for JS/TS/Svelte)
+      -- Biome: selective formatting per filetype
       vim.lsp.config("biome", {
         capabilities = shared.capabilities,
         on_attach = function(client, bufnr)
           local filetype = vim.bo[bufnr].filetype
-
-          -- Enable formatting for supported filetypes
           if
             filetype:match "javascript"
             or filetype:match "typescript"
@@ -121,58 +160,11 @@ return {
           then
             client.server_capabilities.documentFormattingProvider = true
           end
-
-          shared.on_attach(client, bufnr)
-        end,
-        filetypes = {
-          "javascript",
-          "typescript",
-          "javascriptreact",
-          "typescriptreact",
-          "svelte",
-          "json",
-          "jsonc",
-          "css",
-          "html",
-        },
-      })
-
-      -- CSS
-      vim.lsp.config("cssls", {
-        capabilities = shared.capabilities,
-        on_attach = function(client, bufnr)
-          shared.disable_fmt(client)
           shared.on_attach(client, bufnr)
         end,
       })
 
-      -- Tailwind
-      vim.lsp.config("tailwindcss", {
-        capabilities = shared.capabilities,
-        on_attach = shared.on_attach,
-      })
-
-      -- Svelte
-      vim.lsp.config("svelte", {
-        capabilities = shared.capabilities,
-        on_attach = function(client, bufnr)
-          shared.disable_fmt(client)
-          shared.on_attach(client, bufnr)
-        end,
-        filetypes = { "svelte" },
-      })
-
-      -- Emmet
-      vim.lsp.config("emmet_ls", {
-        capabilities = shared.capabilities,
-        on_attach = function(client, bufnr)
-          shared.disable_fmt(client)
-          shared.on_attach(client, bufnr)
-        end,
-        filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
-      })
-
-      -- Ruff (Python)
+      -- Ruff: Python linter with format-on-save
       vim.lsp.config("ruff", {
         capabilities = shared.capabilities,
         on_attach = function(client, bufnr)
@@ -189,11 +181,10 @@ return {
         },
       })
 
-      -- Pyright
+      -- Pyright: Python type checker with custom settings
       vim.lsp.config("pyright", {
         capabilities = shared.capabilities,
         on_attach = shared.on_attach,
-        filetypes = { "python" },
         settings = {
           pyright = {
             disableOrganizeImports = true,
@@ -206,29 +197,24 @@ return {
         },
       })
 
-      -- Swift
-      vim.lsp.config("sourcekit", {
-        capabilities = shared.capabilities,
-        on_attach = shared.on_attach,
-        filetypes = { "swift" },
-      })
-
       -- Enable all LSP servers
-      vim.lsp.enable "html"
-      vim.lsp.enable "rubocop"
-      vim.lsp.enable "ruby_lsp"
-      vim.lsp.enable "denols"
-      vim.lsp.enable "biome"
-      vim.lsp.enable "ts_ls"
-      vim.lsp.enable "cssls"
-      vim.lsp.enable "tailwindcss"
-      vim.lsp.enable "svelte"
-      vim.lsp.enable "graphql"
-      vim.lsp.enable "emmet_ls"
-      vim.lsp.enable "ruff"
-      vim.lsp.enable "pyright"
-      vim.lsp.enable "sourcekit"
-      vim.lsp.enable "lua_ls"
+      vim.lsp.enable {
+        "html",
+        "rubocop",
+        "ruby_lsp",
+        "denols",
+        "biome",
+        "ts_ls",
+        "cssls",
+        "tailwindcss",
+        "svelte",
+        "graphql",
+        "emmet_ls",
+        "ruff",
+        "pyright",
+        "sourcekit",
+        "lua_ls",
+      }
     end)
 
     if not status then print("Error in LSP configuration:", result) end
