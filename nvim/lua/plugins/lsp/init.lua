@@ -103,10 +103,10 @@ return {
         vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts)
 
         opts.desc = "Go to previous diagnostic"
-        vim.keymap.set("n", "[d", vim.diagnostic.get_prev, opts)
+        vim.keymap.set("n", "[d", function() vim.diagnostic.jump { count = -1 } end, opts)
 
         opts.desc = "Go to next diagnostic"
-        vim.keymap.set("n", "]d", vim.diagnostic.get_next, opts)
+        vim.keymap.set("n", "]d", function() vim.diagnostic.jump { count = 1 } end, opts)
 
         opts.desc = "Show documentation for what is under cursor"
         vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)

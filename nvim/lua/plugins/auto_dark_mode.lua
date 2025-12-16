@@ -4,6 +4,8 @@ return {
   dependencies = {
     {
       "folke/tokyonight.nvim",
+      "zenbones-theme/zenbones.nvim",
+      "rktjmp/lush.nvim",
       lazy = false,
       priority = 1000,
       config = function()
@@ -37,9 +39,9 @@ return {
       set_dark_mode = function() set_colorscheme("tokyonight", "dark") end,
       set_light_mode = function()
         -- Optional: set gruvbox contrast level
-        vim.g.gruvbox_contrast_light = "medium"
-        vim.g.gruvbox_invert_selection = 0
-        set_colorscheme("gruvbox", "light")
+        -- vim.g.gruvbox_contrast_light = "medium"
+        -- vim.g.gruvbox_invert_selection = 0
+        set_colorscheme("zenbones", "light")
 
         -- Optional: enforce transparent bg
         vim.cmd [[

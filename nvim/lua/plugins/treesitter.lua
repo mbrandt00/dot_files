@@ -34,6 +34,15 @@ return {
     }
 
     configs.setup {
+      incremental_selection = {
+        enable = true,
+        keymaps = {
+          init_selection = "<A-o>",
+          node_incremental = "<A-o>",
+          scope_incremental = "<A-O>",
+          node_decremental = "<A-i>",
+        },
+      },
       ensure_installed = {
         "ruby",
         "lua",

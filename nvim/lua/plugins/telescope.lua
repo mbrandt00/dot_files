@@ -18,31 +18,7 @@ return {
     local lga_actions = require "telescope-live-grep-args.actions"
 
     telescope.setup {
-      pickers = {
-        buffers = {
-          show_all_buffers = true,
-          sort_lastused = true,
-          sort_mru = true,
-          previewer = true,
-          theme = "dropdown",
-          mappings = {
-            i = {
-              ["<C-x>"] = actions.delete_buffer + actions.move_to_top,
-            },
-          },
-        },
-        marks = {
-          mappings = {
-            i = {
-              ["<C-x>"] = actions.delete_mark,
-            },
-          },
-        },
-      },
       extensions = {
-        smart_open = {
-          match_algorithm = "fzf",
-        },
 
         live_grep_args = {
           auto_quoting = true, -- enable/disable auto-quoting
@@ -54,14 +30,10 @@ return {
               ["<C-space>"] = lga_actions.to_fuzzy_refine,
             },
           },
-          -- ... also accepts theme settings, for example:
-          -- theme = "dropdown", -- use dropdown theme
-          -- theme = { }, -- use own theme spec
-          -- layout_config = { mirror=true }, -- mirror preview pane
         },
       },
       defaults = {
-        path_display = { "smart" },
+        path_display = { "truncate" },
         file_ignore_patterns = {
           "^.git/logs/",
           "^private/var/",
@@ -94,21 +66,15 @@ return {
     keymap.set("n", "<leader>fR", function() builtin.lsp_references() end, { desc = "Find references" })
     keymap.set("n", "<leader>fc", "<cmd>Telescope grep_string<cr>", { desc = "Find string under cursor in cwd" })
     keymap.set("n", "<leader>bb", ":Telescope buffers<CR>", { noremap = true, silent = true, desc = "Fuzzy buffers" })
-    -- keymap.set("n", "<C-s>", require("auto-session.session-lens").search_session, { noremap = true })
 
     -- Additional telescope mappings
     keymap.set(
       "n",
       "<leader>fn",
-      function() require("telescope").builtin.find_files { cwd = vim.fn.stdpath "config" } end,
+      function() builtin.find_files { cwd = vim.fn.stdpath "config" } end,
       { desc = "[F]ind [N]eovim files" }
     )
 
-    keymap.set(
-      "n",
-      "<leader>fS",
-      function() require("telescope.builtin").lsp_document_symbols() end,
-      { desc = "Find symbols" }
-    )
+    keymap.set("n", "<leader>fS", function() builtin.lsp_document_symbols() end, { desc = "Find symbols" })
   end,
 }

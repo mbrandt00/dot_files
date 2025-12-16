@@ -126,7 +126,7 @@ gui:
 
     # Border color of non-focused windows
     inactiveBorderColor:
-      - gray
+      - default
 
     # Border color of focused window when searching in that window
     searchingActiveBorderColor:
@@ -135,32 +135,31 @@ gui:
 
     # Color of keybindings help text in the bottom line
     optionsTextColor:
-      - blue
+      - default
 
-    # Background color of selected line.
-    # See https://github.com/jesseduffield/lazygit/blob/master/docs/Config.md#highlighting-the-selected-line
+    # Background color of selected line - use reverse for automatic contrast
     selectedLineBgColor:
-      - blue
+      - gray
 
     # Background color of selected line when view doesn't have focus.
     inactiveViewSelectedLineBgColor:
-      - bold
+      - default
 
     # Foreground color of copied commit
     cherryPickedCommitFgColor:
-      - blue
+      - cyan
 
     # Background color of copied commit
     cherryPickedCommitBgColor:
-      - cyan
+      - default
 
     # Foreground color of marked base commit (for rebase)
     markedBaseCommitFgColor:
-      - blue
+      - yellow
 
     # Background color of marked base commit (for rebase)
     markedBaseCommitBgColor:
-      - yellow
+      - default
 
     # Color for file with unstaged changes
     unstagedChangesColor:

@@ -1,5 +1,5 @@
-background = "#ffffff"
+background = "#faf1ef"
 foreground = "#111111"
 cursor-color = "#CD853F"
-theme = "flexoki-light"
-background-opacity = 0.99
+theme = "Neobones Light"
+window-padding-color = background
