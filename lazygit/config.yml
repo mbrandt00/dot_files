@@ -4,7 +4,6 @@ gui:
   authorColors: {
     "*": '#e28743',
     "Michael Brandt": '#1c86b7'
-
   }
 
   # See https://github.com/jesseduffield/lazygit/blob/master/docs/Config.md#custom-branch-color
@@ -139,7 +138,7 @@ gui:
 
     # Background color of selected line - use reverse for automatic contrast
     selectedLineBgColor:
-      - gray
+      - default
 
     # Background color of selected line when view doesn't have focus.
     inactiveViewSelectedLineBgColor:

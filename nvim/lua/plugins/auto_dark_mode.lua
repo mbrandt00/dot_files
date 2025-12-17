@@ -47,6 +47,7 @@ return {
         vim.cmd [[
           highlight Normal guibg=NONE ctermbg=NONE
           highlight NormalNC guibg=NONE ctermbg=NONE
+          highlight TelescopeSelection guibg=#d5c4a1 gui=bold
         ]]
       end,
     }
