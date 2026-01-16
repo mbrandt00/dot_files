@@ -3,22 +3,14 @@ return {
   lazy = false,
   dependencies = {
     {
-      "folke/tokyonight.nvim",
-      "zenbones-theme/zenbones.nvim",
-      "rktjmp/lush.nvim",
+      "sainnhe/gruvbox-material",
       lazy = false,
       priority = 1000,
       config = function()
-        require("tokyonight").setup {
-          style = "moon",
-          transparent = false,
-        }
+        vim.g.gruvbox_material_background = "medium"
+        vim.g.gruvbox_material_foreground = "material"
+        vim.g.gruvbox_material_better_performance = 1
       end,
-    },
-    {
-      "morhetz/gruvbox",
-      lazy = false,
-      priority = 1000,
     },
   },
   config = function()
@@ -36,19 +28,13 @@ return {
     require("auto-dark-mode").setup {
       update_interval = 1000,
       fallback = "dark",
-      set_dark_mode = function() set_colorscheme("tokyonight", "dark") end,
+      set_dark_mode = function()
+        vim.g.gruvbox_material_background = "medium"
+        set_colorscheme("gruvbox-material", "dark")
+      end,
       set_light_mode = function()
-        -- Optional: set gruvbox contrast level
-        -- vim.g.gruvbox_contrast_light = "medium"
-        -- vim.g.gruvbox_invert_selection = 0
-        set_colorscheme("zenbones", "light")
-
-        -- Optional: enforce transparent bg
-        vim.cmd [[
-          highlight Normal guibg=NONE ctermbg=NONE
-          highlight NormalNC guibg=NONE ctermbg=NONE
-          highlight TelescopeSelection guibg=#d5c4a1 gui=bold
-        ]]
+        vim.g.gruvbox_material_background = "soft"
+        set_colorscheme("gruvbox-material", "light")
       end,
     }
   end,

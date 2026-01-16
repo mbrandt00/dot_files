@@ -8,7 +8,6 @@ return {
   config = function()
     local configs = require "nvim-treesitter.configs"
     local rainbow_delimiters = require "rainbow-delimiters"
-    local treesitter_objects = require "nvim-treesitter-textobjects"
     vim.g.rainbow_delimiters = {
       strategy = {
         [""] = rainbow_delimiters.strategy["global"],

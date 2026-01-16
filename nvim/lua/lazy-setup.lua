@@ -17,7 +17,9 @@ require("lazy").setup({ { import = "plugins" } }, {
     enabled = true,
     notify = false,
   },
-  local_spec = true, -- enable .lazy.lua loading
+  local_spec = {
+    enabled = true,
+  },
   change_detection = {
     notify = false,
   },

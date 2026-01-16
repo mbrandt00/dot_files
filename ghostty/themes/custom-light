@@ -1,5 +1,4 @@
-background = "#faf1ef"
-foreground = "#111111"
-cursor-color = "#CD853F"
-theme = "Neobones Light"
+background = "#f2e5bc"
+foreground = "#654735"
+cursor-color = "#654735"
 window-padding-color = background

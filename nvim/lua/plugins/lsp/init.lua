@@ -11,7 +11,12 @@ return {
     "saadparwaiz1/cmp_luasnip",
     { "antosha417/nvim-lsp-file-operations", config = true },
   },
-  config = function()
+  opts = {
+    -- Default server configurations
+    -- These can be overridden/extended by .lazy.lua
+    servers = {},
+  },
+  config = function(_, opts)
     local shared = require "plugins.lsp.config"
 
     -- Configure nvim-cmp
@@ -76,43 +81,43 @@ return {
     vim.api.nvim_create_autocmd("LspAttach", {
       group = vim.api.nvim_create_augroup("UserLspConfig", {}),
       callback = function(ev)
-        local opts = { buffer = ev.buf, noremap = true, silent = true }
+        local keymap_opts = { buffer = ev.buf, noremap = true, silent = true }
 
-        opts.desc = "Show LSP references"
-        vim.keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", opts)
+        keymap_opts.desc = "Show LSP references"
+        vim.keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", keymap_opts)
 
-        opts.desc = "Go to declaration"
-        vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
+        keymap_opts.desc = "Go to declaration"
+        vim.keymap.set("n", "gD", vim.lsp.buf.declaration, keymap_opts)
 
-        opts.desc = "Show LSP definitions"
-        vim.keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
+        keymap_opts.desc = "Show LSP definitions"
+        vim.keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", keymap_opts)
 
-        opts.desc = "Show LSP type definitions"
-        vim.keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", opts)
+        keymap_opts.desc = "Show LSP type definitions"
+        vim.keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", keymap_opts)
 
-        opts.desc = "See available code actions"
-        vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
+        keymap_opts.desc = "See available code actions"
+        vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, keymap_opts)
 
-        opts.desc = "Smart rename"
-        vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
+        keymap_opts.desc = "Smart rename"
+        vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, keymap_opts)
 
-        opts.desc = "Show buffer diagnostics"
-        vim.keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", opts)
+        keymap_opts.desc = "Show buffer diagnostics"
+        vim.keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", keymap_opts)
 
-        opts.desc = "Show line diagnostics"
-        vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts)
+        keymap_opts.desc = "Show line diagnostics"
+        vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, keymap_opts)
 
-        opts.desc = "Go to previous diagnostic"
-        vim.keymap.set("n", "[d", function() vim.diagnostic.jump { count = -1 } end, opts)
+        keymap_opts.desc = "Go to previous diagnostic"
+        vim.keymap.set("n", "[d", function() vim.diagnostic.jump { count = -1 } end, keymap_opts)
 
-        opts.desc = "Go to next diagnostic"
-        vim.keymap.set("n", "]d", function() vim.diagnostic.jump { count = 1 } end, opts)
+        keymap_opts.desc = "Go to next diagnostic"
+        vim.keymap.set("n", "]d", function() vim.diagnostic.jump { count = 1 } end, keymap_opts)
 
-        opts.desc = "Show documentation for what is under cursor"
-        vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+        keymap_opts.desc = "Show documentation for what is under cursor"
+        vim.keymap.set("n", "K", vim.lsp.buf.hover, keymap_opts)
 
-        opts.desc = "Restart LSP"
-        vim.keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts)
+        keymap_opts.desc = "Restart LSP"
+        vim.keymap.set("n", "<leader>rs", ":LspRestart<CR>", keymap_opts)
       end,
     })
 
@@ -142,27 +147,6 @@ return {
           end,
         })
       end
-
-      -- Biome: selective formatting per filetype
-      vim.lsp.config("biome", {
-        capabilities = shared.capabilities,
-        on_attach = function(client, bufnr)
-          local filetype = vim.bo[bufnr].filetype
-          if
-            filetype:match "javascript"
-            or filetype:match "typescript"
-            or filetype == "javascriptreact"
-            or filetype == "typescriptreact"
-            or filetype == "svelte"
-            or filetype == "html"
-            or filetype == "css"
-            or filetype == "json"
-          then
-            client.server_capabilities.documentFormattingProvider = true
-          end
-          shared.on_attach(client, bufnr)
-        end,
-      })
 
       -- Ruff: Python linter with format-on-save
       vim.lsp.config("ruff", {
@@ -197,13 +181,13 @@ return {
         },
       })
 
-      -- Enable all LSP servers
-      vim.lsp.enable {
+      -- Process opts.servers from .lazy.lua merging
+      -- This allows repo-level configs to override/extend server settings
+      local servers_to_enable = {
         "html",
         "rubocop",
         "ruby_lsp",
         "denols",
-        "biome",
         "ts_ls",
         "cssls",
         "tailwindcss",
@@ -215,6 +199,43 @@ return {
         "sourcekit",
         "lua_ls",
       }
+
+      for server_name, server_opts in pairs(opts.servers or {}) do
+        -- Skip disabled servers
+        if server_opts.enabled == false then
+          -- Remove from enable list if explicitly disabled
+          for i, name in ipairs(servers_to_enable) do
+            if name == server_name then
+              table.remove(servers_to_enable, i)
+              break
+            end
+          end
+        else
+          -- Apply server configuration
+          local config = vim.tbl_deep_extend("force", {
+            capabilities = shared.capabilities,
+            on_attach = shared.on_attach,
+          }, server_opts)
+
+          -- Remove our custom 'enabled' key before passing to vim.lsp.config
+          config.enabled = nil
+
+          vim.lsp.config(server_name, config)
+
+          -- Add to enable list if not already present
+          local found = false
+          for _, name in ipairs(servers_to_enable) do
+            if name == server_name then
+              found = true
+              break
+            end
+          end
+          if not found then table.insert(servers_to_enable, server_name) end
+        end
+      end
+
+      -- Enable all LSP servers
+      vim.lsp.enable(servers_to_enable)
     end)
 
     if not status then print("Error in LSP configuration:", result) end
