@@ -1,1 +1,5 @@
+background = "#282828"
+foreground = "#d4be98"
+cursor-color = "#d4be98"
+window-padding-color = background
 background-opacity = 0.97

@@ -2,6 +2,7 @@ vim.g.mapleader = " "
 require "lazy-setup"
 vim.opt.number = true
 vim.opt.relativenumber = true
+vim.opt.signcolumn = "yes"
 vim.opt.wrap = true
 vim.opt.textwidth = 90
 vim.opt.ignorecase = true
