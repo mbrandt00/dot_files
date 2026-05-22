@@ -8,3 +8,13 @@ iterm2
 jgit
 spotify-tui
 tmux/plugins
+
+.DS_Store
+1Password/
+filezilla/
+gh/
+lazydocker/
+opencode/
+opencode-claude-code-auth/
+rclone/
+swiftpm/
