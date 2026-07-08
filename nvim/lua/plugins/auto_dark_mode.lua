@@ -17,27 +17,20 @@ return {
     },
   },
   config = function()
-    local function set_colorscheme(name, background)
-      -- Always wipe current theme
-      vim.g.colors_name = nil
-
-      -- Apply colorscheme
-      vim.cmd.colorscheme(name)
-
-      -- Force background override (some themes will reset it)
-      vim.opt.background = background
-    end
-
     require("auto-dark-mode").setup {
       update_interval = 1000,
       fallback = "dark",
       set_dark_mode = function()
+        -- background must be set before :colorscheme; gruvbox-material reads it
+        -- (and gruvbox_material_background) at the moment the colorscheme is applied.
         vim.g.gruvbox_material_background = "medium"
-        set_colorscheme("gruvbox-material", "dark")
+        vim.o.background = "dark"
+        vim.cmd.colorscheme "gruvbox-material"
       end,
       set_light_mode = function()
         vim.g.gruvbox_material_background = "soft"
-        set_colorscheme("gruvbox-material", "light")
+        vim.o.background = "light"
+        vim.cmd.colorscheme "gruvbox-material"
       end,
     }
   end,

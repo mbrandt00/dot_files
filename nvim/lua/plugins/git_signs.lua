@@ -2,6 +2,21 @@ return {
   "lewis6991/gitsigns.nvim",
   config = function()
     local gitsigns = require "gitsigns"
+
+    -- gitsigns links its inline word-diff groups to TermCursor by default, which
+    -- renders as an unreadable tan/brown block on top of the diff line background
+    -- (only visible on *modified* lines, never on pure additions). gruvbox-material
+    -- ships a theme-aware emphasis group, DiffText, that recolors itself for light
+    -- and dark, so relink the inline groups to it. Done via a ColorScheme autocmd
+    -- because :colorscheme wipes all highlights on every theme toggle.
+    local function fix_diff_highlights()
+      for _, group in ipairs { "GitSignsAddInline", "GitSignsChangeInline", "GitSignsDeleteInline" } do
+        vim.api.nvim_set_hl(0, group, { link = "DiffText" })
+      end
+    end
+    vim.api.nvim_create_autocmd("ColorScheme", { callback = fix_diff_highlights })
+    fix_diff_highlights()
+
     gitsigns.setup {
       on_attach = function(bufnr)
         local gs = package.loaded.gitsigns
