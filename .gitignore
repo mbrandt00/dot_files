@@ -18,3 +18,11 @@ opencode/
 opencode-claude-code-auth/
 rclone/
 swiftpm/
+
+# machine-local app state and secrets
+.wrangler/
+configstore/
+crossnote/
+homebrew/
+sops/
+spotatui/
