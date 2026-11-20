@@ -26,3 +26,9 @@ crossnote/
 homebrew/
 sops/
 spotatui/
+
+# work org identifiers (public repo) and downloaded binaries
+okta-mcp/
+tfenv/versions/
+# hand-made backups
+*.bak-*

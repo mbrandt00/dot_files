@@ -2,4 +2,10 @@ theme = "dark:custom-dark,light:custom-light"
 font-size = 14
 font-family = Maple Mono NF
 mouse-hide-while-typing = true
-keybind = shift+enter=text:\x1b\r
+# Left Option sends Alt (nvim's Alt-j/k/q/c quickfix maps);
+# right Option keeps macOS special-character input.
+macos-option-as-alt = left
+
+# Shift+Enter sends a linefeed (Ctrl+J), which Claude Code and Pi both read as
+# a newline; it survives tmux, unlike a modified Enter.
+keybind = shift+enter=text:\n
