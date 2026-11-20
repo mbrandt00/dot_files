@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+# tmux prefix+v: revdiff floating over the pane, lazygit-style.
+#
+# With a review queue (see revdiff-queue) in the pane's worktree, prefix+v
+# opens a menu of the groups. After revdiff closes, a verdict menu asks what to
+# do; quitting revdiff alone never accepts or skips a group. Esc on any menu
+# leaves everything as it was, and unsent notes are kept as a draft that is
+# loaded again next time.
+#
+# Without a queue it reviews the whole diff, as before.
+#
+# Hand-offs go into the tmux paste buffer "revdiff", never typed into the
+# Claude pane: Enter there could answer a pending permission prompt.
+#
+# Usage (from tmux.conf):
+#   run-shell -b "revdiff-popup PANE DIR CLIENT"
+# Internal (from the menus):
+#   revdiff-popup --all|--queue PANE ROOT CLIENT
+#   revdiff-popup --group N PANE ROOT CLIENT
+#   revdiff-popup --verdict N accepted|changes PANE ROOT CLIENT
+set -u
+
+self=$(realpath "$0")
+Q="$(dirname "$self")/revdiff-queue"
+
+mode=entry n= verdict=
+case ${1:-} in
+  --all) mode=all; shift ;;
+  --queue) mode=queue; shift ;;
+  --group) mode=group; n=$2; shift 2 ;;
+  --verdict) mode=verdict; n=$2; verdict=$3; shift 3 ;;
+esac
+pane=$1 dir=$2 client=$3
+
+say() { tmux display-message -c "$client" -d "${2:-4000}" "revdiff: $1"; }
+
+root=$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null) || { say "$dir is not in a git worktree"; exit 0; }
+repo=$(basename "$root")
+
+# Float over the pane itself; fall back to a centred 90% box when the pane is
+# too small to review in. The popup takes the keyboard until it closes.
+popup() { # title command
+  local pw ph geom
+  read -r pw ph < <(tmux display-message -p -t "$pane" '#{pane_width} #{pane_height}')
+  if (( pw >= 100 && ph >= 24 )); then
+    geom=(-x P -y P -w "$pw" -h "$ph")
+  else
+    geom=(-x C -y C -w 90% -h 90%)
+  fi
+  tmux display-popup -c "$client" -t "$pane" "${geom[@]}" -d "$root" -T " $1 " -E "$2"
+}
+
+menu() { # title start-index items...
+  local title=$1 start=$2; shift 2
+  tmux display-menu -c "$client" -t "$pane" -x P -y P -T " $title " -C "$start" "$@"
+}
+
+# A tmux command that runs this script again with the given mode args.
+again() { printf 'run-shell -b "%q %s %q %q %q"' "$self" "$*" "$pane" "$root" "$client"; }
+
+has_queue() { [[ -n $("$Q" -C "$root" list 2>/dev/null) ]]; }
+
+review_all() {
+  local args=() what out
+  while IFS= read -r a; do args+=("$a"); done < <("$Q" -C "$root" args)
+  case ${args[0]} in
+    --untracked) what="uncommitted changes" ;;
+    HEAD~1) what="last commit" ;;
+    *) what="$(git -C "$root" branch --show-current) vs ${args[0]}" ;;
+  esac
+  out=$(mktemp "${TMPDIR:-/tmp}/revdiff-output-XXXXXX")
+  popup "revdiff · $repo · $what" "$(printf '%q ' revdiff "${args[@]}" -o "$out")"
+  if [[ ! -s $out ]]; then rm -f "$out"; exit 0; fi
+  tmux set-buffer -b revdiff "Address my revdiff annotations in $out (reviewed: $what in $root)."
+  say "annotations saved. prefix+] in the Claude pane pastes the hand-off" 6000
+}
+
+queue_menu() {
+  local items=() start= i=0 first_changes= mark key total=0 done_n=0
+  while IFS=$'\t' read -r gn st title; do
+    case $st in accepted) mark="✓"; done_n=$((done_n + 1)) ;; changes) mark="✎" ;; *) mark="○" ;; esac
+    key=; (( gn <= 9 )) && key=$gn
+    items+=("$mark $gn  $title" "$key" "$(again --group "$gn")")
+    [[ -z $start && $st == pending ]] && start=$i
+    [[ -z $first_changes && $st == changes ]] && first_changes=$i
+    i=$((i + 1)); total=$((total + 1))
+  done < <("$Q" -C "$root" list)
+  start=${start:-${first_changes:-0}}
+  items+=("" "Whole diff" w "$(again --all)")
+  items+=("" "-○ to review   ✎ waiting on Claude   ✓ accepted" "" "")
+  menu "$repo · $done_n/$total accepted" "$start" "${items[@]}"
+}
+
+review_group() {
+  local g title status args=() only=() extra=() out total
+  g=$("$Q" -C "$root" path "$n") || { say "no group $n"; exit 0; }
+  title=$(<"$g/title"); status=$(<"$g/status")
+  total=$("$Q" -C "$root" list | wc -l | tr -d ' ')
+  while IFS= read -r a; do args+=("$a"); done < <("$Q" -C "$root" args)
+  while IFS= read -r f; do [[ -n $f ]] && only+=(--only "$f"); done <"$g/files"
+  [[ -s $g/description.md ]] && extra+=(--description-file "$g/description.md")
+
+  # Seed the output with the notes being reloaded: Q (discard) leaves the file
+  # untouched, so the draft survives; q after deleting every note empties it.
+  out=$(mktemp "${TMPDIR:-/tmp}/revdiff-output-XXXXXX")
+  if [[ -s $g/draft.md ]]; then
+    cp "$g/draft.md" "$out"; extra+=(--annotations "$g/draft.md")
+  elif [[ $status == changes && -s $g/notes.md ]]; then
+    cp "$g/notes.md" "$out"; extra+=(--annotations "$g/notes.md")
+  fi
+
+  popup "revdiff · $repo · group $n/$total · $title ($status)" \
+    "$(printf '%q ' revdiff "${args[@]}" "${only[@]}" "${extra[@]}" -o "$out")"
+
+  if [[ -s $out ]]; then mv "$out" "$g/draft.md"; else rm -f "$out" "$g/draft.md"; fi
+
+  local later="display-message -c '$client' 'revdiff: group $n left as it was'"
+  if [[ -s $g/draft.md ]]; then
+    menu "group $n · $title · you left notes" 0 \
+      "Send notes to Claude (changes requested)" c "$(again --verdict "$n" changes)" \
+      "Reopen group $n" r "$(again --group "$n")" \
+      "Later: keep notes as a draft" l "$later" \
+      "" \
+      "Queue…" v "$(again --queue)"
+  else
+    menu "group $n · $title · no notes" 0 \
+      "Accept group $n" a "$(again --verdict "$n" accepted)" \
+      "Reopen group $n" r "$(again --group "$n")" \
+      "Later: not accepted yet" l "$later" \
+      "" \
+      "Queue…" v "$(again --queue)"
+  fi
+}
+
+record_verdict() {
+  local g title
+  "$Q" -C "$root" verdict "$n" "$verdict" || { say "could not record $verdict for group $n"; exit 0; }
+  g=$("$Q" -C "$root" path "$n"); title=$(<"$g/title")
+  if [[ $verdict == accepted ]]; then
+    say "group $n accepted. prefix+v for the queue"
+  else
+    tmux set-buffer -b revdiff "Address my revdiff notes on review group $n ($title) in $g/notes.md (worktree $root). When they are addressed, run: revdiff-queue -C $root reset $n"
+    say "notes sent to the queue. prefix+] in the Claude pane pastes the hand-off" 6000
+  fi
+}
+
+case $mode in
+  entry) if has_queue; then queue_menu; else review_all; fi ;;
+  queue) queue_menu ;;
+  all) review_all ;;
+  group) review_group ;;
+  verdict) record_verdict ;;
+esac

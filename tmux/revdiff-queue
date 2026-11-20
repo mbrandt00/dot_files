@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+# revdiff-queue: a per-worktree queue of grouped revdiff reviews.
+#
+# Claude writes the groups (init, add, reset). You review them with tmux
+# prefix+v (revdiff-popup), which records your verdict. Quitting revdiff never
+# changes a group's status; only the verdict menu does.
+#
+# The queue lives in the worktree's own git dir, so every worktree has its own,
+# nothing is committed, and it survives /clear and restarts.
+#
+# Statuses:
+#   pending   waiting for your review (new, or Claude addressed your notes)
+#   changes   you sent notes; waiting for Claude
+#   accepted  you pressed "accept" in the verdict menu
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+usage: revdiff-queue [-C dir] <command> [args]
+
+  init [--force] [-- revdiff-args...]   start a queue; revdiff args are fixed only
+                                        if given (default: detect at open time)
+  add --title T [--description-file F] -- file...
+                                        add a group; prints its number
+  list                                  N<TAB>status<TAB>title per group
+  show N                                a group's title, status, files and notes
+  path [N]                              the queue dir, or a group's dir
+  args                                  the revdiff args prefix+v will use
+  reset N                               changes -> pending, after Claude addressed the notes
+  verdict N accepted|changes            prefix+v only: record your decision
+  clear                                 delete the queue
+EOF
+}
+
+dir=.
+if [[ ${1:-} == -C ]]; then dir=$2; shift 2; fi
+cmd=${1:-}; shift || true
+
+root=$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null) || { echo "revdiff-queue: $dir is not in a git worktree" >&2; exit 2; }
+qdir="$(git -C "$root" rev-parse --absolute-git-dir)/revdiff-queue"
+
+need_queue() { [[ -d $qdir/groups ]] || { echo "revdiff-queue: no queue in $root (run init)" >&2; exit 3; }; }
+need_group() {
+  need_queue
+  [[ ${1:-} =~ ^[0-9]+$ && -d $qdir/groups/$1 ]] || { echo "revdiff-queue: no group '${1:-}'" >&2; exit 3; }
+  g="$qdir/groups/$1"
+}
+groups() { ls "$qdir/groups" 2>/dev/null | { grep -E "^[0-9]+\$" || true; } | sort -n; }
+stamp() { date +%Y%m%d-%H%M%S; }
+
+# Same choice prefix+v has always made: uncommitted work, else branch vs base, else last commit.
+detect_args() {
+  if [[ -s $qdir/args ]]; then cat "$qdir/args"; return; fi
+  local branch base
+  branch=$(git -C "$root" branch --show-current)
+  base=$(git -C "$root" rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's#^origin/##' || true)
+  base=${base:-main}
+  if [[ -n $(git -C "$root" status --porcelain 2>/dev/null) ]]; then echo --untracked
+  elif [[ $branch != "$base" ]]; then echo "$base"
+  else echo HEAD~1
+  fi
+}
+
+case $cmd in
+  init)
+    force=0
+    while [[ $# -gt 0 ]]; do
+      case $1 in --force) force=1; shift ;; --) shift; break ;; *) usage >&2; exit 2 ;; esac
+    done
+    if [[ -d $qdir && $force -eq 0 ]]; then
+      echo "revdiff-queue: a queue already exists in $root (use --force to replace, or add to it)" >&2; exit 4
+    fi
+    rm -rf "$qdir"; mkdir -p "$qdir/groups"
+    : >"$qdir/args"
+    for a in "$@"; do printf '%s\n' "$a" >>"$qdir/args"; done
+    echo "$qdir"
+    ;;
+  add)
+    need_queue
+    title= desc=
+    while [[ $# -gt 0 ]]; do
+      case $1 in
+        --title) title=$2; shift 2 ;;
+        --description-file) desc=$2; shift 2 ;;
+        --) shift; break ;;
+        *) usage >&2; exit 2 ;;
+      esac
+    done
+    [[ -n $title && $# -gt 0 ]] || { echo "revdiff-queue add: need --title and at least one file" >&2; exit 2; }
+    last=$(groups | tail -1); n=$(( ${last:-0} + 1 ))
+    g="$qdir/groups/$n"; mkdir -p "$g/history"
+    printf '%s\n' "$title" >"$g/title"
+    printf '%s\n' "$@" >"$g/files"
+    [[ -n $desc ]] && cp "$desc" "$g/description.md"
+    echo pending >"$g/status"
+    echo "$n"
+    ;;
+  list)
+    need_queue
+    for n in $(groups); do
+      printf '%s\t%s\t%s\n' "$n" "$(<"$qdir/groups/$n/status")" "$(<"$qdir/groups/$n/title")"
+    done
+    ;;
+  show)
+    need_group "${1:-}"
+    echo "group:  $1 · $(<"$g/title")"
+    echo "status: $(<"$g/status")"
+    echo "files:"; sed 's/^/  /' "$g/files"
+    [[ -s $g/description.md ]] && echo "description: $g/description.md"
+    [[ -s $g/notes.md ]] && echo "notes (for Claude): $g/notes.md"
+    [[ -s $g/draft.md ]] && echo "draft (not sent yet): $g/draft.md"
+    true
+    ;;
+  path)
+    if [[ -n ${1:-} ]]; then need_group "$1"; echo "$g"; else need_queue; echo "$qdir"; fi
+    ;;
+  args)
+    detect_args
+    ;;
+  reset)
+    need_group "${1:-}"
+    [[ $(<"$g/status") == changes ]] || { echo "revdiff-queue: group $1 is $(<"$g/status"), not changes" >&2; exit 4; }
+    [[ -f $g/notes.md ]] && mv "$g/notes.md" "$g/history/addressed-$(stamp).md"
+    echo pending >"$g/status"
+    ;;
+  verdict)
+    need_group "${1:-}"
+    case ${2:-} in
+      accepted)
+        [[ -f $g/draft.md ]] && mv "$g/draft.md" "$g/history/draft-$(stamp).md"
+        echo accepted >"$g/status"
+        ;;
+      changes)
+        [[ -s $g/draft.md ]] || { echo "revdiff-queue: group $1 has no notes to send" >&2; exit 4; }
+        cp "$g/draft.md" "$g/history/notes-$(stamp).md"
+        mv "$g/draft.md" "$g/notes.md"
+        echo changes >"$g/status"
+        ;;
+      *) usage >&2; exit 2 ;;
+    esac
+    ;;
+  clear)
+    rm -rf "$qdir"
+    ;;
+  ""|-h|--help|help) usage ;;
+  *) usage >&2; exit 2 ;;
+esac
