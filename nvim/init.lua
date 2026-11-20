@@ -10,11 +10,8 @@ vim.opt.softtabstop = 2
 vim.opt.tabstop = 2 -- Width of a tab character
 vim.opt.shiftwidth = 2 -- Width of indentation
 vim.opt.expandtab = true -- Convert tabs to spaces
-vim.opt.expandtab = true
 vim.opt.clipboard = "unnamed"
 vim.api.nvim_set_keymap("n", "<leader>bd", ":bdelete<CR>", { noremap = true })
-vim.cmd "hi LineNr guifg=#61afef ctermfg=blue"
-vim.cmd "hi CursorLineNr guifg=#61afef ctermfg=blue"
 
 -- functions
 local builtin = require "telescope.builtin"

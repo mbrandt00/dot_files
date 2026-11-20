@@ -54,6 +54,8 @@ return {
         "typescript",
         "graphql",
         "vimdoc",
+        "markdown",
+        "markdown_inline",
       },
       sync_install = false,
       highlight = { enable = true },

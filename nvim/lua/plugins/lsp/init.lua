@@ -9,7 +9,9 @@ return {
     "hrsh7th/cmp-path",
     "L3MON4D3/LuaSnip",
     "saadparwaiz1/cmp_luasnip",
-    { "antosha417/nvim-lsp-file-operations", config = true },
+    -- Pinned: 1303184 (2026-10-25) added a 30s timer that asserts the log file
+    -- exists, which errors repeatedly when nothing has written to it yet.
+    { "antosha417/nvim-lsp-file-operations", commit = "cab4c48", config = true },
   },
   opts = {
     -- Default server configurations
@@ -129,13 +131,28 @@ return {
       require "plugins.lsp.lua_ls"
 
       -- Simple servers: just need capabilities + on_attach
-      local simple_servers = { "tailwindcss", "rubocop", "ruby_lsp", "sourcekit", "graphql" }
+      local simple_servers = { "rubocop", "ruby_lsp", "sourcekit", "graphql" }
       for _, server in ipairs(simple_servers) do
         vim.lsp.config(server, {
           capabilities = shared.capabilities,
           on_attach = shared.on_attach,
         })
       end
+
+      -- Tailwind: skip Claude Code worktrees during project discovery. They lack
+      -- .svelte-kit/, so their tsconfig "extends" fails on every server start.
+      -- Setting files.exclude replaces the defaults, so they are repeated here.
+      vim.lsp.config("tailwindcss", {
+        capabilities = shared.capabilities,
+        on_attach = shared.on_attach,
+        settings = {
+          tailwindCSS = {
+            files = {
+              exclude = { "**/.git/**", "**/node_modules/**", "**/.hg/**", "**/.svn/**", "**/.claude/**" },
+            },
+          },
+        },
+      })
 
       -- Servers with disable_fmt
       local disable_fmt_servers = { "html", "cssls", "svelte", "emmet_ls" }
@@ -201,7 +218,11 @@ return {
         "lua_ls",
       }
 
+      -- lspconfig renamed these; map old names from repo-level .lazy.lua files
+      local renamed_servers = { tsgo = "tsc" }
+
       for server_name, server_opts in pairs(opts.servers or {}) do
+        server_name = renamed_servers[server_name] or server_name
         -- Skip disabled servers
         if server_opts.enabled == false then
           -- Remove from enable list if explicitly disabled
