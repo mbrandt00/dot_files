@@ -1,0 +1,5 @@
+# Worktrunk user config. See `wt config create --help` for every option.
+
+[projects."github.com/mbrandt00/Bravissimo"]
+# Sibling checkouts: ~/personal/Bravissimo-feature-area-short
+worktree-path = "{{ repo_path }}/../{{ repo }}-{{ branch | sanitize }}"
