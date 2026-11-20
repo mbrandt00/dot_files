@@ -1,0 +1,1 @@
+{ "name": "secrets-guard", "version": "0.1.0", "description": "Refuses tool calls that would read or print .env.secrets or .env.local" }

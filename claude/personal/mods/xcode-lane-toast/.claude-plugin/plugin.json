@@ -1,0 +1,5 @@
+{
+  "name": "xcode-lane-toast",
+  "version": "0.1.0",
+  "description": "Toasts when the shared xcodebuild lane frees up or this session's job finishes"
+}

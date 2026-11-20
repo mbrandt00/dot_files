@@ -1,0 +1,1 @@
+{ "name": "env-write-guard", "version": "0.2.0", "description": "Asks the person before any command or MCP call that writes to prod" }

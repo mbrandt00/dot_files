@@ -1,0 +1,31 @@
+{
+  "name": "personal-mods",
+  "owner": {
+    "name": "Michael Brandt"
+  },
+  "metadata": {
+    "description": "Personal Claude Code mods"
+  },
+  "plugins": [
+    {
+      "name": "secrets-guard",
+      "description": "Refuses tool calls that would read or print .env.secrets or .env.local",
+      "source": "./secrets-guard"
+    },
+    {
+      "name": "worktree-band",
+      "description": "A row above the prompt: branch, worktrunk status, PR and open-PR count",
+      "source": "./worktree-band"
+    },
+    {
+      "name": "xcode-lane-toast",
+      "description": "Toasts when the shared xcodebuild lane frees up or this session's job finishes",
+      "source": "./xcode-lane-toast"
+    },
+    {
+      "name": "env-write-guard",
+      "description": "Asks the person before any command or MCP call that writes to prod",
+      "source": "./env-write-guard"
+    }
+  ]
+}

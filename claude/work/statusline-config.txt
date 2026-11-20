@@ -1,0 +1,12 @@
+# Status line segments — set to 1 to show, 0 to hide.
+# Final line order: worktree | dir | branch | context | quota-usage
+
+SHOW_WORKTREE=1       # git worktree root name (e.g. Bravissimo-curate)
+SHOW_DIRECTORY=0      # nested cwd basename (e.g. default-sheet-music)
+SHOW_BRANCH=1         # ⎇ checked-out branch
+SHOW_CONTEXT=1        # Ctx: % of context window used (this conversation)
+SHOW_CONTEXT_BAR=1    # 10-block ▓░ bar next to the context %
+
+SHOW_USAGE=0          # 5-hour quota % (hits Claude usage API via Swift)
+SHOW_PROGRESS_BAR=1   #   bar for the quota usage
+SHOW_RESET_TIME=0     #   quota reset time

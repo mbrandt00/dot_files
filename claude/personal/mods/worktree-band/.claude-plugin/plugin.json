@@ -1,0 +1,1 @@
+{ "name": "worktree-band", "version": "0.1.0", "description": "A row above the prompt: branch, worktrunk status, PR and open-PR count", "types": "./types/index.d.ts" }

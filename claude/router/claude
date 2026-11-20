@@ -1,0 +1,12 @@
+#!/bin/sh
+# Routes Claude Code to the personal or work config dir by working directory.
+# A real executable (not a zsh function) so programs that exec `claude`
+# directly, such as `wt switch -x claude`, are routed too.
+if [ -z "$CLAUDE_CONFIG_DIR" ]; then
+  case "$PWD/" in
+    "$HOME"/personal/*)                    CLAUDE_CONFIG_DIR="$HOME/.claude-personal" ;;
+    *)                                     CLAUDE_CONFIG_DIR="$HOME/.claude" ;;
+  esac
+  export CLAUDE_CONFIG_DIR
+fi
+exec "$HOME/.local/bin/claude" "$@"
