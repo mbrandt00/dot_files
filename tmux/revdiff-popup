@@ -1,19 +1,18 @@
 #!/usr/bin/env bash
-# tmux prefix+v: revdiff floating over the pane, lazygit-style.
+# tmux prefix+v: revdiff floating over the pane on the whole diff, lazygit-style.
+# Notes left in it are pasted into the window's Claude input box (never with
+# Enter) unless Claude is at a permission prompt; then they stay in the tmux
+# paste buffer "revdiff" for prefix+].
 #
-# With a review queue (see revdiff-queue) in the pane's worktree, prefix+v
-# opens a menu of the groups. After revdiff closes, a verdict menu asks what to
-# do; quitting revdiff alone never accepts or skips a group. Esc on any menu
-# leaves everything as it was, and unsent notes are kept as a draft that is
-# loaded again next time.
-#
-# Without a queue it reviews the whole diff, as before.
-#
-# Hand-offs go into the tmux paste buffer "revdiff", never typed into the
-# Claude pane: Enter there could answer a pending permission prompt.
+# tmux prefix+V: the review queue (see revdiff-queue) in the pane's worktree, as
+# a menu of groups. After revdiff closes, a verdict menu asks what to do;
+# quitting revdiff alone never accepts or skips a group. Esc on any menu leaves
+# everything as it was, and unsent notes are kept as a draft that is loaded
+# again next time.
 #
 # Usage (from tmux.conf):
-#   run-shell -b "revdiff-popup PANE DIR CLIENT"
+#   run-shell -b "revdiff-popup PANE DIR CLIENT"            (whole diff)
+#   run-shell -b "revdiff-popup --queue PANE DIR CLIENT"    (queue menu)
 # Internal (from the menus):
 #   revdiff-popup --all|--queue PANE ROOT CLIENT
 #   revdiff-popup --group N PANE ROOT CLIENT
@@ -58,7 +57,11 @@ menu() { # title start-index items...
 # A tmux command that runs this script again with the given mode args.
 again() { printf 'run-shell -b "%q %s %q %q %q"' "$self" "$*" "$pane" "$root" "$client"; }
 
-has_queue() { [[ -n $("$Q" -C "$root" list 2>/dev/null) ]]; }
+# The Claude pane in the reviewed pane's window: its command is the version number.
+claude_pane() {
+  tmux list-panes -t "$pane" -F '#{pane_id} #{pane_current_command}' |
+    awk '$2 ~ /^[0-9]+\.[0-9]+\.[0-9]+$/ {print $1; exit}'
+}
 
 review_all() {
   local args=() what out
@@ -72,7 +75,15 @@ review_all() {
   popup "revdiff · $repo · $what" "$(printf '%q ' revdiff "${args[@]}" -o "$out")"
   if [[ ! -s $out ]]; then rm -f "$out"; exit 0; fi
   tmux set-buffer -b revdiff "Address my revdiff annotations in $out (reviewed: $what in $root)."
-  say "annotations saved. prefix+] in the Claude pane pastes the hand-off" 6000
+  local target
+  target=$(claude_pane)
+  if [[ -n $target && $(tmux show -wv -t "$target" @claude_state 2>/dev/null) != blocked ]]; then
+    tmux paste-buffer -p -b revdiff -t "$target"
+    tmux select-pane -t "$target"
+    say "notes pasted into Claude. Enter sends them" 6000
+  else
+    say "annotations saved. prefix+] in the Claude pane pastes the hand-off" 6000
+  fi
 }
 
 queue_menu() {
@@ -145,7 +156,7 @@ record_verdict() {
 }
 
 case $mode in
-  entry) if has_queue; then queue_menu; else review_all; fi ;;
+  entry) review_all ;;
   queue) queue_menu ;;
   all) review_all ;;
   group) review_group ;;
