@@ -2,11 +2,17 @@
 # Routes Claude Code to the personal or work config dir by working directory.
 # A real executable (not a zsh function) so programs that exec `claude`
 # directly, such as `wt switch -x claude`, are routed too.
-if [ -z "$CLAUDE_CONFIG_DIR" ]; then
-  case "$PWD/" in
-    "$HOME"/personal/*)                    CLAUDE_CONFIG_DIR="$HOME/.claude-personal" ;;
-    *)                                     CLAUDE_CONFIG_DIR="$HOME/.claude" ;;
-  esac
-  export CLAUDE_CONFIG_DIR
+# An inherited CLAUDE_CONFIG_DIR wins unless it names the other profile: a session in one
+# profile that starts `claude` in the other's folder must not carry its account along.
+personal="$HOME/.claude-personal" work="$HOME/.claude"
+lc() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
+# macOS paths are case-insensitive, so ~/Personal must still match.
+case "$(lc "$PWD/")" in
+  "$(lc "$HOME")"/personal/*) want=$personal other=$work ;;
+  "$(lc "$HOME")"/work/*)     want=$work other=$personal ;;
+  *)                          want=$work other= ;;
+esac
+if [ -z "$CLAUDE_CONFIG_DIR" ] || [ "${CLAUDE_CONFIG_DIR%/}" = "$other" ]; then
+  export CLAUDE_CONFIG_DIR="$want"
 fi
 exec "$HOME/.local/bin/claude" "$@"
