@@ -1,3 +1,5 @@
+# Follows macOS appearance. Custom Gruvbox Material: the built-in light theme makes palette 0
+# (black) the background colour, so black text vanishes; brightblack (8) is tmux's grey.
 theme = "dark:custom-dark,light:custom-light"
 font-size = 14
 font-family = Maple Mono NF
