@@ -25,7 +25,7 @@ vim.keymap.set(
 vim.cmd [[
 augroup highlight_yank
 autocmd!
-au TextYankPost * silent! lua vim.highlight.on_yank({higroup="Visual", timeout=400})
+au TextYankPost * silent! lua vim.hl.on_yank({higroup="Visual", timeout=400})
 augroup END
 ]]
 vim.keymap.set("n", "<leader>r", "<cmd>source $MYVIMRC<CR>", { silent = true, desc = "Reload config" })
