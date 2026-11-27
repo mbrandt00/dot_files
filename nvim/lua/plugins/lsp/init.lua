@@ -74,10 +74,11 @@ return {
         },
       },
       virtual_text = false,
+      -- Full messages under the cursor's line only (replaces diagflow.nvim).
+      virtual_lines = { current_line = true },
       underline = true,
       update_in_insert = false,
       severity_sort = true,
-      float = { border = "rounded" },
     }
 
     -- Set up keymaps on LspAttach (more reliable than on_attach in config)

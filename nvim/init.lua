@@ -11,6 +11,7 @@ vim.opt.tabstop = 2 -- Width of a tab character
 vim.opt.shiftwidth = 2 -- Width of indentation
 vim.opt.expandtab = true -- Convert tabs to spaces
 vim.opt.clipboard = "unnamed"
+vim.o.winborder = "rounded" -- every floating window (hover, diagnostics, signature help)
 vim.api.nvim_set_keymap("n", "<leader>bd", ":bdelete<CR>", { noremap = true })
 
 -- functions
