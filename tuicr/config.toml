@@ -1,0 +1,4 @@
+# tuicr — keys verified against tuicr 0.29 config warnings
+editor = "nvim"
+comment_vim = true
+username = "Michael Brandt"
