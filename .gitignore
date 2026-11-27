@@ -36,3 +36,6 @@ tfenv/versions/
 __pycache__/
 # revdiff review history (includes work repos)
 revdiff/history/
+
+# worktrunk per-machine command approvals
+worktrunk/approvals.toml*
