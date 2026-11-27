@@ -167,6 +167,10 @@ export const register: Register = on => {
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    // Terminal only: the desktop app already shows branch and PR state itself.
+    if (e.surface !== 'terminal') {
+      return next(e)
+    }
     const now = await read($, info)
     if (e.props.hasSurvey || now === null) {
       return next(e)
